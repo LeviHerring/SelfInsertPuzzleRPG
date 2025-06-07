@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using UnityEngine;
+using UnityEngine.UI; 
 
 public class CharacterDialogue : MonoBehaviour
 {
@@ -10,7 +11,8 @@ public class CharacterDialogue : MonoBehaviour
     public OverworldDialogueSystem overworldDialogueSystem;
     bool canTalkTo;
     bool isTalking;
-    GameObject player; 
+    GameObject player;
+    public Sprite[] sprite; //0 idle, 1 is happy, 2 is sad, 3 is angry, 4 is shocked 
     // Start is called before the first frame update
     void Start()
     {
