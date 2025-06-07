@@ -6,7 +6,8 @@ public class MovementScript : MonoBehaviour
 {
     float speed = 10f;
     bool isVerticleHeld = false;
-    bool isHorizontalHeld = false; 
+    bool isHorizontalHeld = false;
+    public bool isTalking; 
     // Start is called before the first frame update
     void Start()
     {
@@ -16,7 +17,11 @@ public class MovementScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Move();
+        if(isTalking == false)
+        {
+            Move();
+        }
+       
     }
 
     void Move()
