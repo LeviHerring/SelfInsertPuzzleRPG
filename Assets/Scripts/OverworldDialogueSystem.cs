@@ -1,7 +1,6 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using TMPro; 
+using TMPro;
 
 public class OverworldDialogueSystem : MonoBehaviour
 {
@@ -10,56 +9,88 @@ public class OverworldDialogueSystem : MonoBehaviour
     public GameObject textBox;
     public TextMeshProUGUI nameText;
     public TextMeshProUGUI speechText;
-    public int speechInt;
-    bool isTalking;
-    public GameObject player; 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public GameObject player;
 
-    // Update is called once per frame
+    private int speechInt;
+    private bool isTalking;
+    private bool isTyping;
+    private bool canContinue;
+    private Coroutine typingCoroutine;
+    private CharacterDialogue speaker;
+
     void Update()
     {
         if (!isTalking) return;
 
         if (Input.GetKeyDown(KeyCode.P))
         {
-            if (speechInt < speech.Length)
+            // If still typing: skip to full line
+            if (isTyping)
             {
-                speechText.text = speech[speechInt++];
+                SkipTyping();
             }
-            else
+            // If done typing: go to next line
+            else if (canContinue)
             {
-                EndSpeech();
+                if (speechInt < speech.Length)
+                {
+                    typingCoroutine = StartCoroutine(TypeWriter(speech[speechInt++]));
+                }
+                else
+                {
+                    EndSpeech();
+                }
             }
         }
     }
 
-    public void Speech()
-    {
-        textBox.SetActive(true); 
-        isTalking = true;
-        speechInt = 0;
-        nameText.text = characterName;  
-        speechText.text = speech[speechInt]; 
-    }
-
-    void EndSpeech()
-    {
-        isTalking = false;
-        textBox.SetActive(false);
-        player.GetComponent<MovementScript>().isTalking = false; 
-    }
-
     public void StartDialogue(CharacterDialogue characterDialogue)
     {
+        speaker = characterDialogue;
+        speech = speaker.speech;
+        characterName = speaker.characterName;
+
         textBox.SetActive(true);
         isTalking = true;
         speechInt = 0;
-        nameText.text = characterDialogue.characterName;
-        speechText.text = characterDialogue.speech[speechInt];
-        speech = characterDialogue.speech; 
+
+        nameText.text = characterName;
+        typingCoroutine = StartCoroutine(TypeWriter(speech[speechInt++]));
+    }
+
+    private IEnumerator TypeWriter(string sentence)
+    {
+        isTyping = true;
+        canContinue = false;
+        speechText.text = "";
+
+        foreach (char letter in sentence)
+        {
+            speechText.text += letter;
+            yield return new WaitForSeconds(0.03f); // Adjust speed here
+        }
+
+        isTyping = false;
+        canContinue = true;
+    }
+
+    private void SkipTyping()
+    {
+        if (typingCoroutine != null)
+        {
+            StopCoroutine(typingCoroutine);
+        }
+
+        // Show full current sentence
+        speechText.text = speech[speechInt - 1];
+        isTyping = false;
+        canContinue = true;
+    }
+
+    private void EndSpeech()
+    {
+        isTalking = false;
+        textBox.SetActive(false);
+        player.GetComponent<MovementScript>().isTalking = false;
     }
 }
