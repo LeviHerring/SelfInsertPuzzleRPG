@@ -20,7 +20,6 @@ public class OverworldDialogueSystem : MonoBehaviour
     private bool canContinue;
     private Coroutine typingCoroutine;
     private CharacterDialogue speaker;
-    private string cleanSentence;
     private string currentSentence;
 
     private Dictionary<string, int> moodMap = new Dictionary<string, int>
@@ -34,34 +33,43 @@ public class OverworldDialogueSystem : MonoBehaviour
 
     void Update()
     {
-        if (isTyping)
+        if(Input.GetKeyDown(KeyCode.P) && isTalking == true)
         {
-            SkipTyping(); // Show full current sentence immediately
+            if (isTyping)
+            {
+                SkipTyping(); // Show full current sentence immediately
+            }
+            else if (canContinue)
+            {
+                ShowNextSentence(); // Go to next one
+            }
         }
-        else if (canContinue)
-        {
-            ShowNextSentence(); // Go to next one
-        }
+        
     }
 
     public void StartDialogue(CharacterDialogue characterDialogue)
     {
-        
 
+        speechInt = 0;
         speaker = characterDialogue;
-        speech = speaker.speech;
+        speech = (string[])speaker.speech.Clone();
         characterName = speaker.characterName;
 
         textBox.SetActive(true);
         sprite.sprite = characterDialogue.sprite[0]; 
         sprite.gameObject.SetActive(true);
         isTalking = true;
-        speechInt = 0;
+        
 
         nameText.text = characterName;
+        speechInt = 0;
         string rawSentence = speech[speechInt];
-        cleanSentence = ParseMoodTags(ref rawSentence);
-        typingCoroutine = StartCoroutine(TypeWriter(cleanSentence));
+        Debug.Log($"Starting dialogue for: {characterName}, speech count: {speech.Length}");
+        ParsedDialogueLine parsed = ParseDialogueLine(rawSentence);
+        sprite.sprite = speaker.sprite[parsed.moodIndex]; // set sprite at start
+        currentSentence = parsed.cleanedText;
+        typingCoroutine = StartCoroutine(TypeWriter(currentSentence));
+        speechInt++;
     }
 
     private IEnumerator TypeWriter(string sentence)
@@ -110,12 +118,15 @@ public class OverworldDialogueSystem : MonoBehaviour
     private void EndSpeech()
     {
         isTalking = false;
+        Nullifier();
         textBox.SetActive(false);
         sprite.gameObject.SetActive(false);
+        speechInt = 0;
+       
         player.GetComponent<MovementScript>().isTalking = false;
     }
 
-    private string ParseMoodTags(ref string sentence)
+    private string ParseMoodTags(string sentence)
     {
         Regex tagRegex = new Regex(@"^\{(\w+)\}");
         Match match;
@@ -144,10 +155,56 @@ public class OverworldDialogueSystem : MonoBehaviour
             return;
         }
 
-        string raw = speech[speechInt]; // Don't increment yet
-        currentSentence = ParseMoodTags(ref raw);
+        ParsedDialogueLine parsed = ParseDialogueLine(speech[speechInt]);
+        speechInt++; // Advance the index immediately
+
+        sprite.sprite = speaker.sprite[parsed.moodIndex];
+        currentSentence = parsed.cleanedText;
         typingCoroutine = StartCoroutine(TypeWriter(currentSentence));
-        speechInt++; // Only now increment — after you've used this line
+    }
+
+    void Nullifier()
+    {
+        speaker = null; 
+        speech = null;
+        characterName = null;
+        speechText.text = "";
+        nameText.text = "";
+
+    }
+
+    public struct ParsedDialogueLine
+    {
+        public string cleanedText;
+        public int moodIndex;
+
+        public ParsedDialogueLine(string cleanedText, int moodIndex)
+        {
+            this.cleanedText = cleanedText;
+            this.moodIndex = moodIndex;
+        }
+    }
+
+    private ParsedDialogueLine ParseDialogueLine(string rawLine)
+    {
+        int moodIndex = 0; // Default mood (e.g., idle)
+
+        Regex tagRegex = new Regex(@"^\{(\w+)\}");
+        Match match = tagRegex.Match(rawLine);
+
+        if (match.Success)
+        {
+            string moodTag = match.Groups[1].Value;
+
+            if (moodMap.TryGetValue(moodTag, out int mappedIndex))
+            {
+                moodIndex = mappedIndex;
+            }
+
+            rawLine = rawLine.Substring(match.Length); // Remove the tag
+        }
+
+        return new ParsedDialogueLine(rawLine, moodIndex);
     }
 
 }
