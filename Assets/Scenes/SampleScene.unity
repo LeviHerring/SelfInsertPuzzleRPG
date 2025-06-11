@@ -1239,13 +1239,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8eb4e10b76197854c94241407acd8318, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speech: []
-  characterName: 
-  textBox: {fileID: 330097693}
   nameText: {fileID: 515841663}
   speechText: {fileID: 1359048116}
-  player: {fileID: 2037946933}
   sprite: {fileID: 321088634}
+  speech: []
+  textBox: {fileID: 330097693}
+  player: {fileID: 2037946933}
 --- !u!224 &1743595945
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1836,9 +1835,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speech:
-  - Jamesfisuvskfufbiabckuabvcisbvsbviusbvisbi
+  - '{sad} Jamesfisuvskfufbiabckuabvcisbvsbviusbvisbi'
   - Is
-  - Very
+  - 'Very {angry} very '
   - Small
   characterName: James
   overworldDialogueSystem: {fileID: 1743595944}
